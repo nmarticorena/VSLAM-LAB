@@ -62,7 +62,7 @@ curl -fsSL https://pixi.sh/install.sh | bash
 
 Clone the repository and navigate to the project directory:
 ```bash
-git clone https://github.com/alejandrofontan/VSLAM-LAB.git && cd VSLAM-LAB
+git clone https://github.com/VSLAM-LAB/VSLAM-LAB.git && cd VSLAM-LAB
 ```
 
 ## Quick Demo
@@ -76,7 +76,7 @@ Example commands:
 pixi run demo mast3rslam eth table_3 mono
 pixi run demo droidslam rgbdtum rgbd_dataset_freiburg1_xyz rgbd
 pixi run demo orbslam2 kitti 04 stereo
-pixi run pycuvslam euroc MH_01_easy stereo-vi
+pixi run demo pycuvslam euroc MH_01_easy stereo-vi
 ```
 *To change the paths where VSLAM-LAB-Benchmark or/and VSLAM-LAB-Evaluation data are stored (for example, to /media/${USER}/data), use the following commands:*
 ```

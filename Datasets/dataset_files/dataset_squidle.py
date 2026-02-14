@@ -25,13 +25,31 @@ from Datasets.DatasetVSLAMLab_issues import _get_dataset_issue
 
 SCRIPT_LABEL = f"\033[95m[{Path(__file__).name}]\033[0m "
 CAMPAIGNS: Final = {"ssk16": "ssk16-01", "ssk17": "ssk17-01", "ssk18": "ssk18-01"}
-ORIGIN_UTM: Final = {"ssk16": (387124.51475913724, 2950359.888579014),
-              "ssk17": (387124.51475913724, 2950359.888579014),
-              "ssk18": (387124.51475913724, 2950359.888579014)}
-ORIGIN_ZONE: Final = {"ssk16": (52, 'R'),
-              "ssk17": (52, 'R'),
-              "ssk18": (52, 'R')}
-IMAGE_CROP: Final = {"ssk16": [146,3], "ssk17": [6,13], "ssk18": [4,6]}
+DEPLOYMENT_IDS: Final = {"scottreef15_01": 232, "scottreef11_01": 224,
+                        "scottreef15_02": 238, "scottreef11_02": 214}
+
+ORIGIN_UTM: Final = {
+            "ssk16": (387124.51475913724, 2950359.888579014),
+            "ssk17": (387124.51475913724, 2950359.888579014),
+            "ssk18": (387124.51475913724, 2950359.888579014),
+            "scottreef15_01": (374098.3723509629, 8438570.03130037),
+            "scottreef11_01": (374098.3723509629, 8438570.03130037),
+            "scottreef15_02": (387124.51475913724, 2950359.888579014),
+            "scottreef11_02": (387124.51475913724, 2950359.888579014)
+}
+
+ORIGIN_ZONE: Final = {
+    "ssk16": (52, 'R'),
+    "ssk17": (52, 'R'),
+    "ssk18": (52, 'R'),
+    "scottreef15_01": (51, 'L'),
+    "scottreef11_01": (51, 'L'),
+    "scottreef15_02": (52, 'R'),
+    "scottreef11_02": (52, 'R')
+}
+
+IMAGE_CROP: Final = {"ssk16": [146,3], "ssk17": [6,13], "ssk18": [4,6],
+                     "scottreef15_01": [0,0], "scottreef11_01": [0,0], "scottreef15_02": [0,0], "scottreef11_02": [0,0]}
 
 class SQUIDLE_dataset(DatasetVSLAMLab):
     """SQUIDLE dataset helper for VSLAM-LAB benchmark."""
@@ -72,26 +90,8 @@ class SQUIDLE_dataset(DatasetVSLAMLab):
         # Setup initial params
         base_url = self.url_download_root
         headers = {"auth-token": self.api_token, "Content-type": "application/json", "Accept": "application/json"}
-        query_structure = {
-            "filters": [
-                {
-                    "name": "deployment",
-                    "op": "has",
-                    "val": {
-                        "name": "campaign",
-                        "op": "has",
-                        "val": {
-                            "name": "key",
-                            "op": "eq",
-                            "val": CAMPAIGNS[sequence_name] 
-                        }
-                    }
-                }
-            ],
-            "limit": 10000
-        }
+        query_structure = _get_query_structure(sequence_name)
 
-    
         print_msg(SCRIPT_LABEL, "Querying for images, this may take a while...")
         page_num = 1
         total_pages = 1 
@@ -259,7 +259,8 @@ class SESOKO_dataset(SQUIDLE_dataset):
                     return 
             rgb_path.mkdir(parents=True, exist_ok=True)
     
-            parent_sequence = _get_subsequence_name(sequence_name)
+            #parent_sequence = _get_subsequence_name(sequence_name)
+            parent_sequence = self.subsets.get(sequence_name)[0]
             parent_sequence_path: Path = self.dataset_path / parent_sequence
 
             parent_rgb_csv: Path = parent_sequence_path / "rgb.csv"
@@ -326,14 +327,14 @@ class SESOKO_dataset(SQUIDLE_dataset):
             df_rgb_all.to_csv(rgb_csv, index=False, sep=',') 
             df_pose_all.to_csv(gt_csv, index=False, sep=',')
 
-def _get_subsequence_name(sequence_name: str):
-    if "ssk16" in sequence_name:
-        return "ssk16"
-    elif "ssk17" in sequence_name:
-         return "ssk17"
-    elif "ssk18" in sequence_name:
-        return "ssk18"
-    return
+# def _get_subsequence_name(sequence_name: str):
+#     if "ssk16" in sequence_name:
+#         return "ssk16"
+#     elif "ssk17" in sequence_name:
+#          return "ssk17"
+#     elif "ssk18" in sequence_name:
+#         return "ssk18"
+#     return
 
 def _timestamp_to_nanoseconds(timestamp_str):
     dt = datetime.datetime.fromisoformat(timestamp_str)
@@ -363,6 +364,14 @@ def _parse_pose_data(item, origin_utm, origin_zone):
     lat = item.get('lat')
     lon = item.get('lon')
     
+    ################################
+    # easting, northing, a, b = utm.from_latlon(
+    #     lat, lon 
+    # )
+    # print(a, b)
+    # print(easting, northing)
+    # exit(0)
+    ################################
     zone_num, zone_letter = origin_zone
     easting, northing, _, _ = utm.from_latlon(
         lat, lon, 
@@ -375,3 +384,47 @@ def _parse_pose_data(item, origin_utm, origin_zone):
     tz = item.get('dep')
     return [ts_ns, tx, ty, tz, qx, qy, qz, qw]
 
+
+def _get_query_structure(sequence_name: str):
+
+    if sequence_name == "ssk16" or sequence_name == "ssk17" or sequence_name == "ssk18":
+        query_structure = {
+            "filters": [
+                {
+                    "name": "deployment",
+                    "op": "has",
+                    "val": {
+                        "name": "campaign",
+                        "op": "has",
+                        "val": {
+                            "name": "key",
+                            "op": "eq",
+                            "val": CAMPAIGNS[sequence_name] 
+                        }
+                    }
+                }
+            ],
+            "limit": 1000000
+        }
+    
+    if "scottreef" in sequence_name:
+        query_structure = {
+            "filters": [
+                {"name": "deployment_id", "op": "eq", "val": DEPLOYMENT_IDS[sequence_name]}
+            ],
+            "limit": 1000000
+}
+    return query_structure
+
+class SCOTTREEF_dataset(SESOKO_dataset):
+    """SCOTTREEF dataset helper for VSLAM-LAB benchmark."""
+
+    def __init__(self, benchmark_path: str | Path, dataset_name: str = "scottreef") -> None:
+        super().__init__(Path(benchmark_path), dataset_name) 
+
+        # Load settings
+        with open(self.yaml_file, "r", encoding="utf-8") as f:
+            cfg = yaml.safe_load(f) or {}
+
+        self.subsets = cfg.get("subsets", {})
+        self.combined = cfg.get("combined", {})

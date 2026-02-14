@@ -47,7 +47,7 @@ from Datasets.dataset_yandiwanba import YANDIWANBA_dataset
 from Datasets.dataset_antarctica import ANTARCTICA_dataset
 from Datasets.dataset_hilti2022 import HILTI2022_dataset
 from Datasets.dataset_madmax import MADMAX_dataset
-from Datasets.dataset_videos import VIDEOS_dataset
+from Datasets.dataset_files.dataset_videos import VIDEOS_dataset
 from Datasets.dataset_sweetcorals import SWEETCORALS_dataset
 from Datasets.dataset_ntnu_arl_uw import NTNU_ARL_UW_dataset
 from Datasets.dataset_reefslam import REEFSLAM_dataset
