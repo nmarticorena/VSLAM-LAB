@@ -446,7 +446,7 @@ def update_experiment_csv_log(exp_name: str, settings: Any) -> bool:
     baseline_name = settings.get('Module')
     all_match = exp_log["method_name"].eq(baseline_name).all()
     if not all_match:
-        print_msg(f"{SCRIPT_LABEL}", f"The original method cannot be changed ({(exp_log["method_name"][0])} != {baseline_name}). Only new sequences or more runs can be added to the experiment.",'error')
+        print_msg(f"{SCRIPT_LABEL}", f"The original method cannot be changed ({(exp_log['method_name'][0])} != {baseline_name}). Only new sequences or more runs can be added to the experiment.",'error')
         exit(1)
 
     config_yaml = settings.get('Config')

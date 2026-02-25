@@ -44,6 +44,7 @@ vggtslam-dev = { features = ["vggtslam-dev", "cuda126", "py11", "vggt"], solve-g
 allfeature-dev = { features = ["allfeature-dev", "cuda126", "x11", "opengl"] }
 
 lightglue = { features = ["lightglue", "cuda126", "py11"], solve-group = "lightglue" }
+depth-anything = { features = ["depth-anything", "cuda126",  "py11"], solve-group = "depth-anything" }
 
 # VSLAM-LAB main pipeline    
 [feature.vslamlab]
@@ -111,7 +112,7 @@ evaluate-exp = "python vslamlab_gui.py evaluate_exp"
 compare-exp = "python vslamlab_gui.py compare_exp"
 
 [feature.vslamlab.dependencies]
-python = "*"
+python = "3.13.*"
 pyyaml = "*"
 matplotlib = "*"
 pandas = "*"
@@ -137,6 +138,7 @@ utm = "*"
 7zip = "*"
 viser = "*"
 open3d = "*"
+
 ########################################################################################################################
 ########################################################################################################################
 # droidslam 
@@ -1003,3 +1005,76 @@ zlib = "*"
 
 [feature.allfeature-dev.pypi-dependencies]
 intel-openmp = "*"
+
+# ########################################################################################################################
+# ########################################################################################################################
+# depth-anything 
+[feature.depth-anything]
+channels = ["https://prefix.dev/conda-forge"]
+platforms = ["linux-64"]
+
+[feature.depth-anything.system-requirements]
+cuda = "12.6"
+
+[feature.depth-anything.tasks]
+git-clone = "./git-clone.sh VSLAM-LAB Depth-Anything-3-VSLAM-LAB Depth-Anything-3"
+install = {cmd = 'pip install -e .', cwd = 'Baselines/Depth-Anything-3', depends-on = ['git-clone']}
+depth-inference  = {cmd = 'python -m Utilities.depth-anything', depends-on = ['install']}
+
+[feature.depth-anything.dependencies]
+# Torch libraries
+pytorch-gpu = "*"
+torchvision = "*"
+torchcodec = "*"
+
+# Core
+pre-commit = "*"
+trimesh = "*"
+einops = "*"
+huggingface_hub = "*"
+imageio = "*"
+numpy = "<2"
+opencv = "*"
+xformers = "*"
+open3d = "*"
+
+# API / CLI
+fastapi = "*"
+uvicorn = "*"
+requests = "*"
+typer = "*"
+
+# Config / IO
+pillow = "*"
+omegaconf = "*"
+safetensors = "*"
+plyfile = "*"
+
+# 3D / geometry / eval / video
+evo = "*"
+e3nn = "*"
+moviepy = "*"
+pycolmap = "*"
+addict = "*"
+
+pyyaml = "*"
+matplotlib = "*"
+pandas = "*"
+py-opencv = "*"
+scipy = "*"
+inputimeout = "*"
+scikit-learn = "*"
+tqdm = "*"
+google-api-python-client = "*"
+google-auth-oauthlib = "*"
+py7zr = "*"
+exifread = "*"
+pyproj = "*"
+nvidia-ml-py = "*"
+git-lfs = "*"
+piexif = "*"
+psutil = "*"
+loguru = "*"
+utm = "*"
+7zip = "*"
+viser = "*"
