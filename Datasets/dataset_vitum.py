@@ -15,9 +15,6 @@ from Datasets.DatasetVSLAMLab_utilities import undistort_fisheye
 from utilities import replace_string_in_files
 from path_constants import VSLAM_LAB_DIR
 
-from Evaluate.align_trajectories import align_trajectory_with_groundtruth
-from Evaluate import metrics
-
 from utilities import ws
 
 SCRIPT_LABEL = f"\033[95m[{os.path.basename(__file__)}]\033[0m "

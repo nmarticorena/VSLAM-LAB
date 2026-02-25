@@ -8,9 +8,6 @@ from utilities import downloadFile
 from utilities import decompressFile
 from path_constants import VSLAMLAB_BENCHMARK
 
-from Evaluate.align_trajectories import align_trajectory_with_groundtruth
-from Evaluate import metrics
-
 # from Baselines.colmap_to_vslamlab import get_colmap_keyframes
 # from Baselines.colmap_to_vslamlab import get_colmap_keyframes
 # from Baselines.colmap_to_vslamlab import write_trajectory_tum_format

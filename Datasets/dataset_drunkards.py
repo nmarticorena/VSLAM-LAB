@@ -7,8 +7,6 @@ from zipfile import ZipFile
 
 from Datasets.DatasetVSLAMLab import DatasetVSLAMLab
 
-from Evaluate.align_trajectories import align_trajectory_with_groundtruth
-from Evaluate import metrics
 
 class DRUNKARDS_dataset(DatasetVSLAMLab):
     def __init__(self, benchmark_path):

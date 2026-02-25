@@ -8,8 +8,6 @@ from Datasets.DatasetVSLAMLab import DatasetVSLAMLab
 from utilities import downloadFile
 from utilities import decompressFile
 
-from Evaluate.align_trajectories import align_trajectory_with_groundtruth
-from Evaluate import metrics
 
 
 class HAMLYN_dataset(DatasetVSLAMLab):

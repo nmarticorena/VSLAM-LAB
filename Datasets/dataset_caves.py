@@ -8,8 +8,6 @@ from utilities import downloadFile
 from utilities import decompressFile
 from path_constants import VSLAMLAB_BENCHMARK
 
-from Evaluate.align_trajectories import align_trajectory_with_groundtruth
-from Evaluate import metrics
 
 
 class CAVES_dataset(DatasetVSLAMLab):
