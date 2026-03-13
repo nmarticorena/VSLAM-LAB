@@ -1,22 +1,24 @@
 from __future__ import annotations
 
 import csv
-import cv2
-import yaml
+import json
 import os
-import numpy as np
 from pathlib import Path
-from urllib.parse import urljoin
-from typing import Final, Any
-from collections.abc import Iterable
+from typing import Any
+
+import cv2
+import numpy as np
+import yaml
+from huggingface_hub import HfApi, HfFileSystem, login
+from huggingface_hub.utils import disable_progress_bars
+
 from Datasets.DatasetVSLAMLab import DatasetVSLAMLab
-from utilities import downloadFile, decompressFile
-from path_constants import Retention, BENCHMARK_RETENTION, VSLAMLAB_VIDEOS
+from path_constants import HUGGINGFACE_TOKEN, VSLAMLAB_VIDEOS
 
 
 class VIDEOS_dataset(DatasetVSLAMLab):
     """VIDEOS dataset helper for VSLAM-LAB benchmark."""
-    
+
     def __init__(self, benchmark_path: str | Path, dataset_name: str = "videos") -> None:
         super().__init__(dataset_name, Path(benchmark_path))
 
@@ -27,18 +29,46 @@ class VIDEOS_dataset(DatasetVSLAMLab):
         # Get videso path
         self.videos_path = VSLAMLAB_VIDEOS
 
+        # Get download url
+        self.repo_id = cfg["repo_id"]
+
         # Create sequence_nicknames
         self.sequence_nicknames = self.sequence_names
 
         # Get resolution size
-        self.resolution_size = cfg['resolution_size']
+        self.resolution_size = cfg["resolution_size"]
 
     def download_sequence_data(self, sequence_name: str) -> None:
-        pass
+        if HUGGINGFACE_TOKEN is not None:
+            login(token=HUGGINGFACE_TOKEN)
+            token = HUGGINGFACE_TOKEN
+        else:
+            token = os.environ.get("HF_TOKEN")
+
+        api = HfApi(token=token)
+        fs = HfFileSystem(token=token)
+        disable_progress_bars()
+
+        cache_file = self.dataset_path / "all_files_cache.json"
+        if cache_file.exists():
+            with open(cache_file, "r", encoding="utf-8") as f:
+                all_files = json.load(f)
+        else:
+            all_files = api.list_repo_files(repo_id=self.repo_id, repo_type="dataset")
+            with open(cache_file, "w", encoding="utf-8") as f:
+                json.dump(all_files, f, indent=2)
+            print(f"Fetched and cached {len(all_files)} files")
+
+        for f in all_files:
+            if sequence_name in f:
+                local_file = self.dataset_path / f
+                if not local_file.exists():
+                    fs.get_file(f"datasets/{self.repo_id}/{f}", str(local_file))
+                break
 
     def create_rgb_folder(self, sequence_name: str) -> None:
         sequence_path = self.dataset_path / sequence_name
-        rgb_path = sequence_path / 'rgb_0'
+        rgb_path = sequence_path / "rgb_0"
         for p in self.videos_path.iterdir():
             if p.is_file() and sequence_name in p.name:
                 video_path = p
@@ -49,10 +79,10 @@ class VIDEOS_dataset(DatasetVSLAMLab):
 
     def create_rgb_csv(self, sequence_name: str) -> None:
         sequence_path = self.dataset_path / sequence_name
-        rgb_path = sequence_path / 'rgb_0'
-        rgb_csv = sequence_path / 'rgb.csv'
+        rgb_path = sequence_path / "rgb_0"
+        rgb_csv = sequence_path / "rgb.csv"
 
-        rgb_files = [f for f in os.listdir(rgb_path) if os.path.isfile(os.path.join(rgb_path, f))]
+        rgb_files = [f for f in os.listdir(rgb_path) if os.path.isfile(rgb_path / f)]
         rgb_files.sort()
 
         tmp = rgb_csv.with_suffix(".csv.tmp")
@@ -62,17 +92,22 @@ class VIDEOS_dataset(DatasetVSLAMLab):
             idx = 0
             for filename in rgb_files:
                 path_r0 = "rgb_0/" + filename
-                ts_r0_ns = int(float(idx) / 30 * 1e9)                
+                ts_r0_ns = int(float(idx) / self.rgb_hz * 1e9)
                 w.writerow([ts_r0_ns, path_r0])
                 idx += 1
         tmp.replace(rgb_csv)
 
     def create_calibration_yaml(self, sequence_name: str) -> None:
-       
-        rgb: dict[str, Any] = {"cam_name": "rgb_0", "cam_type": "rgb", 
-                    "cam_model": "unknown", "focal_length": [0, 0], "principal_point": [0, 0],
-                    "fps": float(self.rgb_hz),
-                    "T_BS": np.eye(4)}
+        model, fx, fy, cx, cy = self._get_calibration_parameters(sequence_name)
+        rgb: dict[str, Any] = {
+            "cam_name": "rgb_0",
+            "cam_type": "rgb",
+            "cam_model": model,
+            "focal_length": [fx, fy],
+            "principal_point": [cx, cy],
+            "fps": float(self.rgb_hz),
+            "T_BS": np.eye(4),
+        }
         self.write_calibration_yaml(sequence_name=sequence_name, rgb=[rgb])
 
     def create_groundtruth_csv(self, sequence_name: str) -> None:
@@ -82,9 +117,9 @@ class VIDEOS_dataset(DatasetVSLAMLab):
 
         with open(tmp, "w", newline="", encoding="utf-8") as fout:
             w = csv.writer(fout)
-            w.writerow(["ts (ns)","tx (m)","ty (m)","tz (m)","qx","qy","qz","qw"])
+            w.writerow(["ts (ns)", "tx (m)", "ty (m)", "tz (m)", "qx", "qy", "qz", "qw"])
         tmp.replace(groundtruth_csv)
-             
+
     def extract_png_frames(self, video_path: Path, output_dir: Path):
         """
         Extract frames from a video based on a frequency in Hertz (frames per second) and save as PNG images.
@@ -130,12 +165,14 @@ class VIDEOS_dataset(DatasetVSLAMLab):
 
                 if estimate_new_resolution:
                     rgb_frame_height, rgb_frame_width = rgb_frame.shape[:2]
-                    scaled_height = np.sqrt(self.resolution_size[0] * self.resolution_size[1] * rgb_frame_height / rgb_frame_width)
+                    scaled_height = np.sqrt(
+                        self.resolution_size[0] * self.resolution_size[1] * rgb_frame_height / rgb_frame_width
+                    )
                     scaled_width = self.resolution_size[0] * self.resolution_size[1] / scaled_height
                     scaled_height = int(scaled_height)
                     scaled_width = int(scaled_width)
                     estimate_new_resolution = False
-                
+
                 resized_img = cv2.resize(rgb_frame, (scaled_width, scaled_height), interpolation=cv2.INTER_LANCZOS4)
 
                 # Save as PNG with 5-digit padded integer filename
@@ -151,3 +188,8 @@ class VIDEOS_dataset(DatasetVSLAMLab):
             frame_idx += 1
 
         cap.release()
+
+    def _get_calibration_parameters(self, sequence_name: str) -> tuple[str, float, float, float, float]:
+        if sequence_name in ["GX010213", "GX010214", "GX010215", "GX010216", "GX010217"]:
+            return "pinhole", 494.82475772566221, 494.82475772566221, 369.5, 207.5
+        return "unknown", 0.0, 0.0, 0.0, 0.0
