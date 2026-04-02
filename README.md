@@ -67,19 +67,19 @@ git clone https://github.com/VSLAM-LAB/VSLAM-LAB.git && cd VSLAM-LAB
 
 ## Quick Demo
 You can now execute any baseline on any sequence from any dataset within VSLAM-LAB using the following command:
-```
+```bash
 pixi run demo <baseline> <dataset> <sequence> <mode>
 ```
 For a full list of available systems and datasets, see the [VSLAM-LAB Supported Baselines and Datasets](#vslam-lab-supported-baselines-and-datasets).
 Example commands:
-```
+```bash
 pixi run demo mast3rslam eth table_3 mono
 pixi run demo droidslam rgbdtum rgbd_dataset_freiburg1_xyz rgbd
 pixi run demo orbslam2 kitti 04 stereo
 pixi run demo pycuvslam euroc MH_01_easy stereo-vi
 ```
 *To change the paths where VSLAM-LAB-Benchmark or/and VSLAM-LAB-Evaluation data are stored (for example, to /media/${USER}/data), use the following commands:*
-```
+```bash
 pixi run set-benchmark-path /media/${USER}/data
 pixi run set-evaluation-path /media/${USER}/data
 ```
@@ -87,12 +87,12 @@ pixi run set-evaluation-path /media/${USER}/data
 ## Configure your own experiments
 With **VSLAM-LAB**, you can easily design and configure experiments using a YAML file and run them with a single command.
 To **run** the experiment demo, execute the following command:
-```
+```bash
 pixi run vslamlab configs/exp_vslamlab.yaml (--overwrite)
 ```
 
 Experiments in **VSLAM-LAB** are sequences of entries in a YAML file (see example **~/VSLAM-LAB/configs/exp_vslamlab.yaml**):
-```
+```yaml
 exp_vslamlab:
   Config: config_vslamlab.yaml  # YAML file containing the sequences to be run
   NumRuns: 1                    # Maximum number of executions per sequence
@@ -100,7 +100,7 @@ exp_vslamlab:
   Module: droidslam             # droidslam/monogs/orbslam2/mast3rslam/dpvo/...
 ```
 **Config** files are YAML files containing the list of sequences to be executed in the experiment (see example **~/VSLAM-LAB/configs/config_vslamlab.yaml**):
-```
+```yaml
 rgbdtum:
   - 'rgbd_dataset_freiburg1_xyz'
 hamlyn:
