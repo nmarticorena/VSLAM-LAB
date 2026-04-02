@@ -450,6 +450,7 @@ termcolor = "*"
 pytorch-lightning = "*"
 huggingface_hub = "*"
 pytorch-metric-learning = "*"
+nodeenv = "*"
 
 [feature.vggtslam.tasks]
 git-clone = 'git clone https://huggingface.co/vslamlab/vggtslam-vslamlab Baselines/VGGT-SLAM'
@@ -935,6 +936,7 @@ termcolor = "*"
 virtualenv = ">=20.10.0"
 lz4 = "*"
 gtsam = { channel = "fontan" }
+nodeenv = "*"
 
 # ########################################################################################################################
 # ########################################################################################################################
@@ -988,7 +990,7 @@ timm = ">=1.0.15,<2"
 ########################################################################################################################
 # allfeature-dev
 [feature.allfeature-dev]
-channels = ["https://prefix.dev/conda-forge", "fontan"]
+channels = ["https://prefix.dev/conda-forge", "fontan", "https://repo.prefix.dev/spqr-tests"]
 platforms = ["linux-64"]
 
 [feature.allfeature-dev.system-requirements]
@@ -1001,7 +1003,78 @@ execute-mono = { cmd = "./bin/vslamlab_allfeature_mono",  cwd = "Baselines/AllFe
 stream = { cmd = "./bin/vslamlab_allfeature_mono_stream",  cwd = "Baselines/AllFeature-VSLAM-DEV" }
 
 [feature.allfeature-dev.dependencies]
-cuda-cudart = "*"
+python = "3.11.*"
+pip = "*"
+onnx = "*"
+onnxruntime = { version = "*", build = "*cuda*" }
+onnxruntime-cpp = { version = "*", build = "*cuda*" }
+
+# CUDA Build Tools
+cuda-compiler = "*"
+cuda-version = "12.6.*"
+cuda-cudart-dev = "*"
+cuda-crt = "*"
+libcusparse-dev = "*"
+cuda-driver-dev = "*"
+cuda-nvcc = "*"
+cuda-nvrtc-dev = "*"
+cuda-nvtx = "*"
+cuda-nvtx-dev = "*"
+cuda-nvml-dev = "*"
+cuda-profiler-api = "*"
+
+# CUDA Libraries
+cudnn = "*"
+libcublas-dev = "*"
+libcudss-dev = "*"
+libcufile-dev = "*"
+libcufft-dev = "*"
+libcurand-dev = "*"
+libcusolver-dev = "*"
+cusparselt = "*"
+libnvjitlink = "*"
+
+# Torch libraries
+pytorch-gpu = "*"
+torchvision = "*"
+torchcodec = "*"
+
+# Core
+pre-commit = "*"
+trimesh = "*"
+einops = "*"
+# huggingface_hub = "*"
+imageio = "*"
+numpy = "<2"
+# opencv = "*"
+xformers = "*"
+open3d = "*"
+
+# API / CLI
+fastapi = "*"
+uvicorn = "*"
+requests = "*"
+typer = "*"
+
+# Config / IO
+pillow = "*"
+omegaconf = "*"
+safetensors = "*"
+plyfile = "*"
+
+# 3D / geometry / eval / video
+evo = "*"
+e3nn = "*"
+moviepy = "*"
+pycolmap = "*"
+addict = "*"
+
+cxx-compiler = "*"
+
+tensorrt-cxx = "*"
+tensorrt-cxx-builder = "*"
+tensorrt-cxx-full = "*"
+
 compilers = "*"
 ninja = "*"
 cmake = "*"
@@ -1019,7 +1092,7 @@ huggingface_hub = "*"
 pandas = "*"
 glew = "*"
 
-pytorch-gpu = "*"
+# pytorch-gpu = "*"
 git-lfs = "*"
 zlib = "*"
 
