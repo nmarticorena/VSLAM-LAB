@@ -21,6 +21,9 @@ class GLOMAP_baseline(BaselineVSLAMLab):
         self.camera_models = ['pinhole', 'radtan4', 'radtan5', 'radtan8', 'equid4']
 
     def build_execute_command(self, exp_it, exp, dataset, sequence_name):
+        if 'matcher_type' in exp.parameters and exp.parameters['matcher_type'] == 'sequential':
+            colmap = COLMAP_baseline()
+            colmap.colmap_download_bag_of_words()
         return super().build_execute_command_cpp(exp_it, exp, dataset, sequence_name)
 
     def git_clone(self) -> None:
