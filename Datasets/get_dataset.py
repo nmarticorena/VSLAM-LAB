@@ -6,7 +6,7 @@ from path_constants import VSLAM_LAB_DIR
 
 # Monocular datasets
 from Datasets.dataset_files.dataset_tartanair import TARTANAIR_dataset
-from Datasets.dataset_files.dataset_squidle import SESOKO_dataset   
+from Datasets.dataset_files.dataset_squidle import SESOKO_dataset
 from Datasets.dataset_files.dataset_sweetcorals import SWEETCORALS_dataset
 from Datasets.dataset_files.dataset_monotum import MONOTUM_dataset
 from Datasets.dataset_files.dataset_hamlyn import HAMLYN_dataset
@@ -43,6 +43,7 @@ from Datasets.dataset_files.dataset_vitum import VITUM_dataset
 # Development
 from Datasets.dataset_files.dataset_videos import VIDEOS_dataset
 from Datasets.dataset_files.dataset_iphone import IPHONE_dataset
+from Datasets.dataset_files.dataset_youtube import YOUTUBE_dataset
 
 SCRIPT_LABEL = f"\033[95m[{Path(__file__).name}]\033[0m "
 
@@ -82,6 +83,7 @@ def get_dataset(dataset_name, benchmark_path):
         # Development
         "videos": lambda: VIDEOS_dataset(benchmark_path),
         "iphone": lambda: IPHONE_dataset(benchmark_path),
+        "youtube": lambda: YOUTUBE_dataset(benchmark_path)
     }
 
     return switcher.get(dataset_name, lambda: "Invalid case")()

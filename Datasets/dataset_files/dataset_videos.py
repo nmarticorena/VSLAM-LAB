@@ -120,18 +120,17 @@ class VIDEOS_dataset(DatasetVSLAMLab):
             w.writerow(["ts (ns)", "tx (m)", "ty (m)", "tz (m)", "qx", "qy", "qz", "qw"])
         tmp.replace(groundtruth_csv)
 
-    def extract_png_frames(self, video_path: Path, output_dir: Path):
+    def extract_png_frames(self, video_path: Path, output_dir: Path, ti: float = 0.0, tf: float = None):
         """
         Extract frames from a video based on a frequency in Hertz (frames per second) and save as PNG images.
         Also creates an rgb.txt file with timestamps and image paths.
-
         Args:
             video_path (str): Path to the input video file.
             output_dir (str): Directory to save the PNG files.
-            frequency_hz (int or float): How many frames to save per second of video.
+            ti (float): Start time in seconds. Defaults to 0.
+            tf (float): End time in seconds. Defaults to end of video.
         """
         output_dir.mkdir(parents=True, exist_ok=True)
-
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             raise IOError(f"Cannot open video file {video_path}")
@@ -140,24 +139,38 @@ class VIDEOS_dataset(DatasetVSLAMLab):
         if fps <= 0:
             raise ValueError("Failed to get FPS from video.")
 
-        frame_interval = int(round(fps / self.rgb_hz))
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        video_duration = total_frames / fps
 
+        # Validate and clamp ti/tf
+        ti = max(0.0, ti)
+        tf = min(tf, video_duration) if tf is not None else video_duration
+        if ti >= tf:
+            raise ValueError(f"ti ({ti}s) must be less than tf ({tf}s).")
+
+        # Seek to start frame
+        start_frame = int(round(ti * fps))
+        end_frame = int(round(tf * fps))
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+
+        frame_interval = int(round(fps / self.rgb_hz))
         print(f"Video opened: {video_path}")
         print(f"Video FPS: {fps:.2f}")
         print(f"Extracting {self.rgb_hz} frames per second (every {frame_interval} frames).")
+        print(f"Time range: {ti:.2f}s to {tf:.2f}s (frames {start_frame} to {end_frame})")
 
-        frame_idx = 0
+        frame_idx = start_frame
         saved_idx = 0
         timestamp_list = []
-
         estimate_new_resolution = True
-        while True:
+
+        while frame_idx <= end_frame:
             ret, frame = cap.read()
             if not ret:
                 break
 
-            if frame_idx % frame_interval == 0:
-                # Compute timestamp
+            if (frame_idx - start_frame) % frame_interval == 0:
+                # Compute timestamp from the beginning of the video
                 timestamp_nsec = int(1e9 * frame_idx / fps)
 
                 # Convert to RGB
@@ -166,9 +179,9 @@ class VIDEOS_dataset(DatasetVSLAMLab):
                 if estimate_new_resolution:
                     rgb_frame_height, rgb_frame_width = rgb_frame.shape[:2]
                     scaled_height = np.sqrt(
-                        self.resolution_size[0] * self.resolution_size[1] * rgb_frame_height / rgb_frame_width
+                        self.target_resolution[0] * self.target_resolution[1] * rgb_frame_height / rgb_frame_width
                     )
-                    scaled_width = self.resolution_size[0] * self.resolution_size[1] / scaled_height
+                    scaled_width = self.target_resolution[0] * self.target_resolution[1] / scaled_height
                     scaled_height = int(scaled_height)
                     scaled_width = int(scaled_width)
                     estimate_new_resolution = False
@@ -182,7 +195,6 @@ class VIDEOS_dataset(DatasetVSLAMLab):
                 # Save timestamp and image path
                 image_relative_path = output_dir / f"{saved_idx:05d}.png"
                 timestamp_list.append((timestamp_nsec, str(image_relative_path)))
-
                 saved_idx += 1
 
             frame_idx += 1
